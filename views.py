@@ -45,8 +45,6 @@ def polinomio2(request, verificacao = False, value = str()):
     else:
         verificacao = False
         polinomio3 = request.POST.get('polinomio2')
-        session = request.session['usuario']
-        u = User.objects.get(user = str(session))
         diretorio = 'static/imagens/pol.png'
         polinomio1 = pn.Polinomio(polinomio3)
         po = polinomio1.poly()
@@ -58,14 +56,16 @@ def polinomio2(request, verificacao = False, value = str()):
         plt.plot(x,y)
         fig.savefig(diretorio)
         verificacaop = True
-        if u.login:
-            q = Question(user12 = u, url = 'polinomio2')
-            q.value = polinomio3
-            q.save()
+        if 'usuario' in request.session:
+            session = request.session['usuario']
+            u = User.objects.get(user = str(session))
+            if u.login:
+                q = Question(user12 = u, url = 'polinomio2')
+                q.value = polinomio3
+                q.save()
         context = {'r':r2,
                    'p':polinomio3,
-                   'verificacaop':verificacaop,
-                   's':request.session['usuario']}
+                   'verificacaop':verificacaop}
         return render(request,'polls/index.html', context)
 
 def equadio(request,verificacao = False, value = str()):
@@ -75,8 +75,6 @@ def equadio(request,verificacao = False, value = str()):
                    'valor':value}
         return render(request, 'polls/equadio.html', context)
     else:
-        session = request.session['usuario']
-        u = User.objects.get(user = str(session))
         equadiof = request.POST.get('equadio')
         eq = str()
         lista = []
@@ -96,10 +94,13 @@ def equadio(request,verificacao = False, value = str()):
         for k in equadiof:
             if k.isalpha():
                 lista.append(k)
-        if u.login:
-            q = Question(user12 = u, url = 'equacaodio')
-            q.value = equadiof
-            q.save()
+        if 'usuario' in request.session:
+            session = request.session['usuario']
+            u = User.objects.get(user = str(session))
+            if u.login:
+                q = Question(user12 = u, url = 'equacaodio')
+                q.value = equadiof
+                q.save()
         context = {'verificacao2':verificacao2,
                 'resul':resul,
                 'equadiof':equadiof,
@@ -113,8 +114,7 @@ def number(request,verificacao = False, value = str()):
                    'valor':value}
         return render(request, 'polls/number.html', context)
     else:
-        session = request.session['usuario']
-        u = User.objects.get(user = str(session))
+        
         Nu = request.POST.get('numero')
         numero = pn.Numero(int(Nu))
         fat = numero.fat()
@@ -127,10 +127,13 @@ def number(request,verificacao = False, value = str()):
                    'isprimebool':isprimebool,
                    'fat':fat,
                    'N':Nu}
-        if u.login:
-            q = Question(user12 = u, url = 'number')
-            q.value = Nu
-            q.save()
+        if 'usuario' in request.session:
+            session = request.session['usuario']
+            u = User.objects.get(user = str(session))
+            if u.login:
+                q = Question(user12 = u, url = 'number')
+                q.value = Nu
+                q.save()
         return render(request, 'polls/number.html', context)
 
 listamais = [0]
@@ -189,8 +192,7 @@ def teoch(request,verificacao = False, value = str()):
         return render(request,'polls/teoch.html', context)
     else:
         l = []
-        session = request.session['usuario']
-        u = User.objects.get(user = str(session))
+       
         for i in request.POST:
             if i.isdigit():
                 for k in request.POST.getlist(f'{i}'):
@@ -201,57 +203,64 @@ def teoch(request,verificacao = False, value = str()):
         q = sum(listamenos)
         p = sum(listamais)
         j = p-q
-        if u.login:
-            k = str()
-            for i in l:
-                k = k+' '+str(i)+' '
-            q = Question(user12 = u, url = 'teoch')
-            q.value = k
-            q.save()    
+        if 'usuario' in request.session:
+            session = request.session['usuario']
+            u = User.objects.get(user = str(session))
+            if u.login:
+                k = str()
+                for i in l:
+                    k = k+' '+str(i)+' '
+                q = Question(user12 = u, url = 'teoch')
+                q.value = k
+                q.save()    
         context = {'m':range(0,(j+1)),
                    'l':f'{b}k+{a}',
                    'e':'Enviar' in request.POST,
                    'verificacao':verificacao}
         return render(request,'polls/teoch.html', context)
 
+
 def historic(request):
     logout(request)
-    verificacao = True
-    usuario = request.session['usuario']
-    u = User.objects.get(user = usuario)
-    verificacao2 = False
-    if u.login:
-        lista_question = list(Question.objects.filter(user12 = u))
-        lista = lista_question
-        for i in lista_question:
-                    if i.value=='':
-                        lista.remove(i)
-        if len(lista) == 0:
-            verificacao2 = True
-        if request.method == 'POST':
-            lista_request = list(request.POST)
-            if lista_request[1][1].isdigit():
-                p = int(lista_request[1][1:])
-                u = lista_question[p]   
-                u.delete()
-                u.save()
-                for i in lista_question:
-                    if i.value=='':
-                        lista.remove(i)
-            else:
-                value2 = request.POST.getlist('question')
-                u2 = Question.objects.get(value = value2[0], user12 = str(request.session['usuario']))
-                if u2.url == 'polinomio2':
-                    return polinomio2(request, verificacao, value2[0])
-                if u2.url == 'equacaodio':
-                    return equadio(request, verificacao, value2[0])
-                if u2.url == 'number':
-                    return number(request, verificacao, value2[0])
-                if u2.url == 'teoch':
-                    return teoch(request, verificacao, value2[0]) 
-        return render(request, 'polls/historic.html',
-                            {'lista_question':lista,
-                             'verificacao2':verificacao2})
+    if 'usuario' in request.session:
+        usuario = request.session['usuario']
+        u = User.objects.get(user = usuario)
+        verificacao2 = False
+        verificacao = True
+        if u.login:
+            lista_question = list(Question.objects.filter(user12 = u))
+            lista = lista_question
+            for i in lista_question:
+                        if i.value=='':
+                            lista.remove(i)
+            if len(lista) == 0:
+                verificacao2 = True
+            if request.method == 'POST':
+                lista_request = list(request.POST)
+                if lista_request[1][1].isdigit():
+                    p = int(lista_request[1][1:])
+                    u = lista_question[p]   
+                    u.delete()
+                    u.save()
+                    for i in lista_question:
+                        if i.value=='':
+                            lista.remove(i)
+                else:
+                    value2 = request.POST.getlist('question')
+                    u2 = Question.objects.get(value = value2[0], user12 = str(request.session['usuario']))
+                    if u2.url == 'polinomio2':
+                        return polinomio2(request, verificacao, value2[0])
+                    if u2.url == 'equacaodio':
+                        return equadio(request, verificacao, value2[0])
+                    if u2.url == 'number':
+                        return number(request, verificacao, value2[0])
+                    if u2.url == 'teoch':
+                        return teoch(request, verificacao, value2[0]) 
+            return render(request, 'polls/historic.html',
+                                {'lista_question':lista,
+                                'verificacao2':verificacao2})
+        else:
+            return render(request, 'polls/historic.html',{'verificacao':True})
     else:
         return render(request, 'polls/historic.html',{'verificacao':True})
 
