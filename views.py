@@ -5,6 +5,7 @@ import numpy as np
 from .models import Question, User
 from django.utils import timezone
 import datetime
+from hashlib import sha256
 def logout(request):
     try:
         u = User.objects.get(user = request.session['usuario'])
@@ -15,15 +16,20 @@ def logout(request):
             u.login = False
             u.save()
 
+def index(request):
+    return render(request,'polls/index.html')
+    
+
+
 def register(request):
     if request.method == 'GET':
         return render(request, 'polls/user.html')
     else:
         usuario  = request.POST.get('usuario')
-        senha = request.POST.get('senha')
+        senha = str(request.POST.get('senha'))
         verificacao = False
         try:
-            user1 = User.objects.get(user = usuario, password = senha)
+            user1 = User.objects.get(user = usuario, password = sha256(senha.encode()).hexdigest())
         except:
             verificacao = True
             context = {'verificacao':verificacao}
@@ -34,17 +40,23 @@ def register(request):
             user1.login_date = timezone.now()
             user1.login = True
             user1.save()
-            return redirect('polinomio2')
+            return redirect('index')
 
 def polinomio2(request, verificacao = False, value = str()):
+    mensagem = 'Use apenas coeficientes inteiros'
     if request.method == 'GET' or verificacao:
         logout(request)
         context = {'verificacao':verificacao,
-                   'valor':value}
-        return render(request, 'polls/index.html',context)
+                   'valor':value,
+                   'mensagem':mensagem}
+        return render(request, 'polls/raizes.html',context)
     else:
         verificacao = False
         polinomio3 = request.POST.get('polinomio2')
+        if polinomio3=='' or 'x' not in polinomio3:
+            s = 'Digite um valor válido'
+            context = {'s':s}
+            return render(request, 'polls/raizes.html', context)
         diretorio = 'static/imagens/pol.png'
         polinomio1 = pn.Polinomio(polinomio3)
         po = polinomio1.poly()
@@ -60,13 +72,14 @@ def polinomio2(request, verificacao = False, value = str()):
             session = request.session['usuario']
             u = User.objects.get(user = str(session))
             if u.login:
-                q = Question(user12 = u, url = 'polinomio2')
+                q = Question(user12 = u, url = 'raizes')
                 q.value = polinomio3
                 q.save()
         context = {'r':r2,
                    'p':polinomio3,
-                   'verificacaop':verificacaop}
-        return render(request,'polls/index.html', context)
+                   'verificacaop':verificacaop,
+                   'mensagem':mensagem}
+        return render(request,'polls/raizes.html', context)
 
 def equadio(request,verificacao = False, value = str()):
     if request.method == 'GET' or verificacao:
@@ -76,8 +89,19 @@ def equadio(request,verificacao = False, value = str()):
         return render(request, 'polls/equadio.html', context)
     else:
         equadiof = request.POST.get('equadio')
+        error=True
+        for i,v in enumerate(equadiof):
+            if v.isdigit():
+                error = False
+                break
+            
+        if equadiof=='' or error:
+            s = 'Digite um valor válido'
+            context = {'s':s}
+            return render(request, 'polls/equadio.html', context)
         eq = str()
         lista = []
+        verificacao2 = True
         for i,v in enumerate(equadiof):
             if v == '=':
                 a = i
@@ -90,7 +114,8 @@ def equadio(request,verificacao = False, value = str()):
         b = p.coeficientes[1]
         c = int(eq2)
         resul = pn.dioequa(int(a),int(b),int(c))
-        verificacao2 = True
+        if isinstance(resul,str):
+            verificacao2=False
         for k in equadiof:
             if k.isalpha():
                 lista.append(k)
@@ -114,8 +139,12 @@ def number(request,verificacao = False, value = str()):
                    'valor':value}
         return render(request, 'polls/number.html', context)
     else:
-        
         Nu = request.POST.get('numero')
+        error = not Nu.isdigit()
+        if Nu=='' or error:
+            s = 'Digite um valor válido'
+            context = {'s':s}
+            return render(request, 'polls/number.html', context)
         numero = pn.Numero(int(Nu))
         fat = numero.fat()
         if len(numero.prime)>1:
@@ -192,11 +221,18 @@ def teoch(request,verificacao = False, value = str()):
         return render(request,'polls/teoch.html', context)
     else:
         l = []
-       
         for i in request.POST:
             if i.isdigit():
                 for k in request.POST.getlist(f'{i}'):
-                    l.append(int(k))    
+                    error = not k.isdigit()
+                    if k=='' or error:
+                        s = 'Digite um valor válido'
+                        context = {'s':s,
+                                   'verificacao':verificacao,
+                                   'm':range(0,1)}
+                        return render(request, 'polls/teoch.html', context)
+                    l.append(int(k))  
+          
         k = pn.teoch(l)
         a = k[0]
         b = k[1]
@@ -248,7 +284,7 @@ def historic(request):
                 else:
                     value2 = request.POST.getlist('question')
                     u2 = Question.objects.get(value = value2[0], user12 = str(request.session['usuario']))
-                    if u2.url == 'polinomio2':
+                    if u2.url == 'raizes':
                         return polinomio2(request, verificacao, value2[0])
                     if u2.url == 'equacaodio':
                         return equadio(request, verificacao, value2[0])
@@ -269,12 +305,12 @@ def cadastro(request):
         return render(request,'polls/cadastro.html')
     else:
         usuario = request.POST.get('usuario')
-        senha = request.POST.get('senha')
+        senha = str(request.POST.get('senha'))
         user_exist = False
         try:
             user = User.objects.get(user=usuario)
         except:
-            user = User(user = usuario, password = senha, login_date = (timezone.now()-datetime.timedelta(minutes=60)))
+            user = User(user = usuario, password = sha256(senha.encode()).hexdigest(), login_date = (timezone.now()-datetime.timedelta(minutes=60)))
             user.save()
             return redirect('register')
         else:
@@ -292,9 +328,9 @@ def mudarsenha(request):
             return render(request,'polls/mudarsenha.html', {'verificacao3':verificaco3})
         else:
             senha2 = request.POST.get('password')
-            senha=request.POST.get('password2')
+            senha=str(request.POST.get('password2'))
             if senha != senha2:
                 return render(request, 'polls/mudarsenha.html',{'v':True})
-            u.password=senha
+            u.password=sha256(senha.encode()).hexdigest()
             u.save()
             return redirect('register')
