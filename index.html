@@ -1,55 +1,263 @@
-{% load static %}
-
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{% static 'style2.css' %}">
-    <title>POLINOMIO</title>
-    <script type="text/javascript"
-  src="http://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
-</script>
-<nav class="navbarbg-body-tertiary">
-  <div class="container-fluid">
-    <a class="navbar-brand" href="{% url 'polinomio2' %}">
-      <img src="https://cdn.pixabay.com/photo/2012/04/13/00/21/plus-31216_640.png" alt="Logo" width="30" height="24" class="d-inline-block align-text-top">
-      SolucoesMatematicas
-    </a>
-  </div>
-</nav>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Barra de Navegação</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      background-color: #f7f7f7;
+      padding: 20px;
+    }
+
+    /* Barra de navegação */
+    .navbar {
+      width: 100%;
+      max-width: 800px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px;
+    }
+
+    /* Conjunto de ícones à esquerda */
+    .left-icons, .right-icons {
+      display: flex;
+      gap: 8px;
+    }
+
+    .icon {
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      color: white;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    /* Ícones matemáticos */
+    .icon.add {
+      background-color: #ff3333;
+    }
+    .icon.subtract {
+      background-color: #333;
+    }
+    .icon.multiply {
+      background-color: #ff3333;
+    }
+    .icon.divide {
+      background-color: #333;
+    }
+
+    /* Linha divisória */
+    .divider {
+      width: 100%;
+      height: 1px;
+      background-color: #ccc;
+      margin: 10px 0;
+    }
+
+    /* Ícones de ações do usuário à direita */
+    .icon.logout {
+      background-color: #ff6666;
+      font-size: 16px;
+    }
+    .icon.add-user {
+      background-color: #ff6666;
+      font-size: 16px;
+    }
+    .icon.history {
+      background-color: #ff6666;
+      font-size: 16px;
+    }
+  </style>
 </head>
 <body>
-<form action="{% url 'polinomio2' %}" method="post">{% csrf_token %}
-    {% if verificacao %}
-      <input type="text" placeholder="{{valor}}" value="{{valor}}" name="polinomio2">
-    {% else %}
-      <input type="text" name="polinomio2">
-    {% endif %}
-    <input type="submit" value="Enviar">
-    <a href="{% url 'register' %}">Login</a>
-    <a href="{% url 'equacaodio' %}">Equação Diofantinas Lineares</a>
-    <a href="{% url 'number' %}">Fatoração</a>
-    <a href="{% url 'teoch' %}">Teorema Chinês dos Restos</a>
-    <a href="{% url 'historic' %}">Historico</a>
-    {% if verificacaop%}
-    <p>As raizes do polinomio:</p>
-    <p style="margin-right: 100%;">$${{p}}$$</p>
-    <p style="margin-right: 100%;">São: <br>{% for i in r %}
-      
-      {% if i.imag == 0 %}
-        $$ x_{ {{forloop.counter}} }= {{i.real}} $$
-        <br>
-      {% elif i.real == 0 %}
-        $$ x_{ {{forloop.counter}} }= {{i.imag}}j$$
-        <br>
-      {% else %}
-      $$ x_{ {{forloop.counter}} } = {{i}}$$
-      {% endif %}
-    {% endfor %}</p>
-    <img src="{% static 'imagens/pol.png' %}">
-  {% endif %}
-  {{s}}
-</form>
+
+  <div class="navbar">
+    <!-- Conjunto de ícones à esquerda -->
+    <div class="left-icons">
+      <div class="icon add">+</div>
+      <div class="icon subtract">−</div>
+      <div class="icon multiply">×</div>
+      <div class="icon divide">÷</div>
+    </div>
+
+    <!-- Linha divisória -->
+    <div class="divider"></div>
+
+    <!-- Ícones de navegação -->
+    <div class="right-icons">
+      <div class="icon logout">🚪</div>
+      <a href="{% url 'register' %}">
+      <div class="icon add-user">➕</div>
+    </a>
+    <a href="{% url 'historic' %}">
+      <div class="icon history">⏰</div>
+    </div>
+</a>
+  </div>
+
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interface de Cálculo</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    a{
+       color: inherit;
+       text-decoration: none;
+       padding: 5px;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background-color: #f7f7f7;
+      padding: 20px;
+    }
+
+    .search-bar {
+      display: flex;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .search-bar input {
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 5px 0 0 5px;
+      outline: none;
+      width: 300px;
+    }
+
+    .search-bar button {
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #ff6666;
+      border: none;
+      color: white;
+      cursor: pointer;
+      border-radius: 0 5px 5px 0;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .search-bar button i {
+      font-style: normal;
+    }
+
+    .divider {
+      width: 100%;
+      height: 1px;
+      background-color: #ccc;
+      margin: 10px 0 20px;
+    }
+
+    .container {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .button {
+      background-color: #ffcccc;
+      border: 3px solid #ff3333;
+      border-radius: 15px;
+      width: 150px;
+      height: 120px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font-size: 16px;
+      font-weight: bold;
+      color: #333;
+      cursor: pointer;
+      transition: transform 0.3s;
+    }
+
+    .button:hover {
+      transform: scale(1.05);
+    }
+
+    .button .formula {
+      font-size: 20px;
+      margin-bottom: 5px;
+    }
+
+    .button .label {
+      font-size: 14px;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Barra de pesquisa -->
+  <div class="search-bar">
+    <input type="text" placeholder="Digite o que você deseja calcular">
+    <button>
+      <i>🔍</i> IR
+    </button>
+  </div>
+
+  <!-- Linha horizontal -->
+  <div class="divider"></div>
+
+  <!-- Botões de cálculo -->
+  <a href="{% url 'equacaodio' %}">
+  <div class="container">
+    <div class="button">
+      <div class="formula">ax + by = c</div>
+      <div class="label">Equação Diofantina</div>
+    </div>
+</a>
+    <a href="{% url 'raizes' %}">
+    <div class="button">
+      <div class="formula">anxⁿ + an-1xⁿ⁻¹</div>
+      <div class="label">Raízes</div>
+    </div>
+</a>
+<a href="{% url 'teoch' %}">
+    <div class="button">
+      <div class="formula">a₁x = c₁ (mod m₁)</div>
+      <div class="label">Teorema</div>
+    </div>
+</a>
+<a href="{% url 'number' %}">
+    <div class="button">
+      <div class="formula">n = p₁ᵃ¹ p₂ᵃ² ... pₙᵃⁿ</div>
+      <div class="label">Fatoração</div>
+    </div>
+  </div>
+</a>
 </body>
 </html>
